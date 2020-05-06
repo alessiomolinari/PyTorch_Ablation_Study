@@ -5,12 +5,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
-from torch.utils.data import DataLoader, Dataset
-from torch.autograd import Variable
+from torch.utils.data import DataLoader
 # Cool package to get an insight of your model like you do in keras summary()
-from torchsummary import summary
-import inspect
-from ablator import Ablator
+from pytorch_ablation.ablator import Ablator
 
 # Parameters
 

@@ -1,5 +1,5 @@
 import torchvision.models as models
-from ablator import Ablator
+from pytorch_ablation.ablator import Ablator
 
 file = open("txt_models/vgg16.txt", "w")
 

@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from ablator import MaggyDataset, Ablator
+from pytorch_ablation.ablator import MaggyDataset, Ablator
 
 from torch.autograd import Variable
 
