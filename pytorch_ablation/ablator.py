@@ -6,10 +6,13 @@ from torch.utils.data import DataLoader
 
 
 class Ablator:
-    def __init__(self, model, dataset, dataset_features, dataloader_kwargs, training_fn):
+    def __init__(self, model, dataset, dataloader_kwargs, training_fn):
+        # TODO maybe you can have a check that model must be a nn.Sequential, otherwise you make it sequential
         self.model = model
         self.dataset = dataset
-        self.dataset_features = dataset_features
+        # TODO dataset_features might call it ablation space? or maybe it can be included in Maggy Dataset?
+        # Maybe not necessary at all?
+        # self.dataset_features = dataset_features
         self.dataloader_kwargs = dataloader_kwargs
         self.training_fn = training_fn
 
@@ -44,6 +47,7 @@ class Ablator:
 
     @staticmethod
     def _match_model_features(model_modules, input_shape):
+        # TODO you have to do a lot of testing with different pytorch layers
         tensor_shape = (1,) + input_shape
         last_valid_out_features = tensor_shape[1]
         i = 0
@@ -88,6 +92,7 @@ class Ablator:
         return model_modules
 
     def new_trial(self, input_shape, ablated_layers=None, ablated_features=None, infer_activation=False):
+        # TODO you don't really need the whole input shape but just the initial features actually
         self.trials.append(Trial(input_shape, ablated_layers, ablated_features, infer_activation))
 
     def execute_trials(self):
@@ -118,9 +123,12 @@ class Ablator:
     def _get_module_list(self):
         modules = []
         for mod in self.model.modules():
-            modules.append(mod)
+            # TODO this is just a quick patch but you should find a better solution
+            if not str(mod).startswith("Sequential"):
+                modules.append(mod)
         # In PyTorch the first module is actually a description of the whole model
-        modules.pop(0)
+        removed = modules.pop(0)
+        print("This is removed\n", removed)
         return modules
 
     def remove_modules(self, modules_list, modules_to_ablate):
@@ -133,6 +141,7 @@ class Ablator:
         ablated = modules.pop(i)
         print("Ablating ", i, " - ", ablated, sep="")
 
+    # TODO static methods might be probably refactored to a module utils.py
     @staticmethod
     def _is_activation(layer):
         from torch.nn.modules import activation
