@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='pytorch_ablation',
+    name='pytorchablation',
     author='Alessio Molinari',
     author_email='alessio.molinari96@gmail.com',
     description='Ablation study framework for PyTorch',
