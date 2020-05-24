@@ -2,17 +2,17 @@ import inspect
 import torch
 import torch.nn as nn
 import copy
-from torch.utils.data import DataLoader
+import numpy as np
+from torch.utils.data import DataLoader, Dataset
 
 
 class Ablator:
     def __init__(self, model, dataset, dataloader_kwargs, training_fn):
         # TODO maybe you can have a check that model must be a nn.Sequential, otherwise you make it sequential
+        if type(model) != nn.Sequential:
+            raise ValueError("Only nn.Sequential is supported as model type")
         self.model = model
         self.dataset = dataset
-        # TODO dataset_features might call it ablation space? or maybe it can be included in Maggy Dataset?
-        # Maybe not necessary at all?
-        # self.dataset_features = dataset_features
         self.dataloader_kwargs = dataloader_kwargs
         self.training_fn = training_fn
 
@@ -127,8 +127,10 @@ class Ablator:
             if not str(mod).startswith("Sequential"):
                 modules.append(mod)
         # In PyTorch the first module is actually a description of the whole model
-        removed = modules.pop(0)
-        print("This is removed\n", removed)
+        # TODO the following two lines interfere with the condition on Sequential
+        #  gotta find a better way to generalize complex models
+        # removed = modules.pop(0)
+        # print("This is removed\n", removed)
         return modules
 
     def remove_modules(self, modules_list, modules_to_ablate):
@@ -139,7 +141,7 @@ class Ablator:
     @staticmethod
     def _ablate_and_print(modules, i):
         ablated = modules.pop(i)
-        print("Ablating ", i, " - ", ablated, sep="")
+        print("Ablating layer ", i, " - ", ablated, sep="")
 
     # TODO static methods might be probably refactored to a module utils.py
     @staticmethod
@@ -153,7 +155,7 @@ class Ablator:
             return False
 
 
-class MaggyDataset:
+class MaggyDataset(Dataset):
     """
     In PyTorch there is no way to get the entire dataset starting from the classes Dataset or DataLoader.
      This is because the only method whose implementation is guaranteed is __getitem__ (enumerate) but there is
@@ -166,6 +168,28 @@ class MaggyDataset:
 
     def ablate_feature(self, feature):
         raise NotImplementedError
+
+
+class PandasDataset(Dataset):
+    def __init__(self, df):
+        super(Dataset).__init__()
+        self.data = df.values
+        self.columns = df.columns.values
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def __len__(self):
+        return self.data.shape[0]
+
+    def ablate_feature(self, feature):
+        lowercase_columns = [col.lower() for col in self.columns]
+        feature = feature.lower()
+        if feature.lower() in lowercase_columns:
+            idx = lowercase_columns.index(feature)
+            self.data = np.delete(self.data, obj=idx, axis=1)
+        else:
+            raise RuntimeError("Ablation failed: column not found")
 
 
 class Trial:

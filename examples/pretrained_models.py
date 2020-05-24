@@ -12,4 +12,3 @@ file = open("../txt_models/inception.txt", "w")
 print(Ablator._get_module_list(inception), file=file)
 
 print(Ablator._get_module_list(inception))
-

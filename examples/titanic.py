@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from pytorch_ablation.ablator import MaggyDataset, Ablator
+from pytorch_ablation.ablator import Ablator, PandasDataset
 
 from torch.autograd import Variable
 
@@ -36,11 +36,17 @@ all_df = all_df.fillna(all_df.mean())
 
 min_max_scaler = MinMaxScaler()
 all_df = min_max_scaler.fit_transform(all_df)
+pandas_df = pd.DataFrame(all_df, columns=dataset_features)
 
 # Split in train/test again
 
 train_df = all_df[:train.shape[0]]
 test_df = all_df[train.shape[0]:]
+
+# In pandas
+
+pd_train_df = pandas_df[:train.shape[0]]
+pd_test_df = pandas_df[train.shape[0]:]
 
 
 # ### Convert from pandas df to numpy array
@@ -58,32 +64,10 @@ test_df = all_df[train.shape[0]:]
 
 # PyTorch Data handling
 
-
-class TitanicDataset(Dataset, MaggyDataset):
-    def __init__(self, data):
-        super(TitanicDataset).__init__()
-        self.data = data
-
-    # Optional override
-    def __len__(self):
-        return self.data.shape[0]
-
-    # Compulsory override
-    def __getitem__(self, idx):
-        return self.data[idx]
-
-    def ablate_feature(self, feature):
-        # The user defines this function that explains the Ablator how to ablate a specific feature.
-        # Not just columns can be ablated but even image channels and anything that is defined in the ablation space.
-        global dataset_features
-        idx = dataset_features.index(feature)
-        self.data = np.delete(self.data, idx, axis=1)
-
-
 # Instantiate dataset and dataloader
 dataloader_kwargs = {"batch_size": 64, "shuffle": False}
 
-dataset = TitanicDataset(train_df)
+dataset = PandasDataset(pd_train_df)
 dataloader = DataLoader(dataset=dataset, **dataloader_kwargs)
 
 model = nn.Sequential(nn.Linear(6, 64),
@@ -141,7 +125,7 @@ def training_function(model, dataloader):
     return loss
 
 
-ablator = Ablator(model, dataset, dataset_features, dataloader_kwargs, training_function)
+ablator = Ablator(model, dataset, dataloader_kwargs, training_function)
 ablator.new_trial((6,), None, None)
 ablator.new_trial((5,), None, "Sex")
 ablator.new_trial((6,), 2, None, infer_activation=True)

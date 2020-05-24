@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
-import ann_ablation
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
