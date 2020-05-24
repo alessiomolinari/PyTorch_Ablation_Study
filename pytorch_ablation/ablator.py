@@ -34,7 +34,9 @@ class Ablator:
         if infer_activation:
             activations_idx = []
             for idx in idx_list:
-                if ((idx + 1) < len(new_modules)) and self._is_activation(new_modules[idx + 1]):
+                if ((idx + 1) < len(new_modules)) and self._is_activation(
+                    new_modules[idx + 1]
+                ):
                     activations_idx.append(idx + 1)
             idx_list = idx_list + activations_idx
             idx_list = list(set(idx_list))
@@ -69,7 +71,9 @@ class Ablator:
                 anti_stuck_idx += 1
 
                 if anti_stuck_idx > 1:
-                    raise RuntimeError("Ablation failed. Check again what modules you are ablating")
+                    raise RuntimeError(
+                        "Ablation failed. Check again what modules you are ablating"
+                    )
 
                 layer_type = type(layer)
                 layer_signature = inspect.signature(layer_type)
@@ -91,9 +95,17 @@ class Ablator:
                 model_modules[i] = layer_type(**new_args)
         return model_modules
 
-    def new_trial(self, input_shape, ablated_layers=None, ablated_features=None, infer_activation=False):
+    def new_trial(
+        self,
+        input_shape,
+        ablated_layers=None,
+        ablated_features=None,
+        infer_activation=False,
+    ):
         # TODO you don't really need the whole input shape but just the initial features actually
-        self.trials.append(Trial(input_shape, ablated_layers, ablated_features, infer_activation))
+        self.trials.append(
+            Trial(input_shape, ablated_layers, ablated_features, infer_activation)
+        )
 
     def execute_trials(self):
         for i, trial in enumerate(self.trials):
@@ -102,7 +114,9 @@ class Ablator:
             original_data = self.dataset.data
 
             # 1) Ablate layers
-            ablated_model = self.ablate_layers(trial.ablated_layers, trial.input_shape, trial.infer_activation)
+            ablated_model = self.ablate_layers(
+                trial.ablated_layers, trial.input_shape, trial.infer_activation
+            )
 
             # 2) Ablate features
             if trial.ablated_features is not None:
@@ -147,6 +161,7 @@ class Ablator:
     @staticmethod
     def _is_activation(layer):
         from torch.nn.modules import activation
+
         activation_functions = inspect.getmembers(activation, inspect.isclass)
         activation_functions = [x[0] for x in activation_functions]
         if layer.__class__.__name__ in activation_functions:
@@ -163,6 +178,7 @@ class MaggyDataset(Dataset):
      as well as a tuple (label, row). For this reason we necessitate a method that returns a tabular dataset
     (tabular because we define feature ablation only on tabular datasets for now) on which we can ablate the columns.
     """
+
     def __init__(self, data):
         self.data = data
 
